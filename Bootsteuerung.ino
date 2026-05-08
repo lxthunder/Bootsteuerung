@@ -38,7 +38,6 @@ Kalibrierung kal;
 Servo steeringServo;
 
 int  heldMotorSpeed  = 0;
-int  heldServoAngle  = 90;
 bool holdActive      = false;
 bool prevBtnHold     = false;
 
@@ -183,10 +182,10 @@ void loop() {
   int servoAngle = applyKneeKal  (joyX, kal.xCenter, kal.xMin, kal.xMax,    0,  180);
   int motorSpeed = applyLinearKal(joyY, kal.yCenter, kal.yMin, kal.yMax, -255,  255);
 
-  // Hold-Toggle: Taster einmal → einfrieren, nochmal → freigeben
+  // Hold-Toggle: Taster einmal → Motor einfrieren, nochmal → freigeben.
+  // Lenkung bleibt immer live.
   if (btnHold && !prevBtnHold) {
     if (!holdActive) {
-      heldServoAngle = servoAngle;
       heldMotorSpeed = motorSpeed;
       holdActive     = true;
     } else {
@@ -195,17 +194,12 @@ void loop() {
   }
   prevBtnHold = btnHold;
 
-  if (holdActive) {
-    steeringServo.write(heldServoAngle);
-    setMotor(heldMotorSpeed);
-  } else {
-    steeringServo.write(servoAngle);
-    setMotor(motorSpeed);
-  }
+  steeringServo.write(servoAngle);
+  setMotor(holdActive ? heldMotorSpeed : motorSpeed);
 
   Serial.print("X=");      Serial.print(joyX);
   Serial.print(" Y=");     Serial.print(joyY);
-  Serial.print(" Srv=");   Serial.print(holdActive ? heldServoAngle : servoAngle);
+  Serial.print(" Srv=");   Serial.print(servoAngle);
   Serial.print(" Mot=");   Serial.println(holdActive ? heldMotorSpeed : motorSpeed);
 
   delay(20);
